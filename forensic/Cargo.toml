@@ -1,9 +1,10 @@
 [package]
 name = "amcache-forensic"
-version = "0.1.0"
+version = "0.2.0"
+publish = false
 edition.workspace = true
 rust-version.workspace = true
-description = "Windows Amcache.hve forensic analyzer — reports inventoried executables (path, SHA-1, publisher) and devices with graded findings (unsigned binary in a system path, execution from a staging directory), plus the amcache4n6 CLI."
+description = "Cross-platform Windows Amcache.hve analyzer with complete supported metadata and text, CSV, JSON, and JSONL output."
 license.workspace = true
 authors.workspace = true
 keywords = ["forensics", "amcache", "windows", "dfir", "execution"]
@@ -15,6 +16,10 @@ readme.workspace = true
 amcache-core = { workspace = true }
 winreg-core = { workspace = true }
 forensicnomicon = { workspace = true }
+csv = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+same-file = { workspace = true }
 
 [lints]
 workspace = true

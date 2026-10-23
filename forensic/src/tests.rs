@@ -37,10 +37,28 @@ fn system_binary_at_non_system_path_flags_masquerading() {
 
 #[test]
 fn system_binary_in_system32_is_not_flagged() {
-    let am = amcache_of(vec![file(r"c:\windows\system32\svchost.exe", None)]);
+    let am = amcache_of(vec![
+        file(r"c:\windows\system32\svchost.exe", None),
+        file(r"D:/WINDOWS/SysWOW64/svchost.exe", None),
+        file(r"\\?\C:\Windows\System32\svchost.exe", None),
+    ]);
     assert!(!audit(&am)
         .iter()
         .any(|x| matches!(x, AmcacheAnomaly::SystemBinaryRelocated { .. })));
+}
+
+#[test]
+fn system_directory_name_elsewhere_does_not_bypass_masquerading_check() {
+    for path in [
+        r"c:\temp\system32\svchost.exe",
+        r"c:\windows.old\system32\svchost.exe",
+        r"c:\windows\system32-backup\svchost.exe",
+    ] {
+        let am = amcache_of(vec![file(path, None)]);
+        assert!(audit(&am)
+            .iter()
+            .any(|x| matches!(x, AmcacheAnomaly::SystemBinaryRelocated { .. })));
+    }
 }
 
 #[test]

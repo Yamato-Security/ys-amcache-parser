@@ -33,14 +33,15 @@ knowledge, not a local allow-list; the README Findings table.
    fleet aggregates — no bespoke `AmcacheAnalysis` type.
 3. **Codes are a published SCREAMING-KEBAB contract** (`AMCACHE-…`) — never changed
    once shipped; new variants get new codes.
-4. **The SHA-1 rides every finding as a hash `SubjectRef`** alongside the file
+4. **When available, the SHA-1 rides the finding as a hash `SubjectRef`** alongside the file
    path, so a graded finding is directly pivotable.
 5. **Reuse fleet heuristics** (`is_system32_binary`, `is_suspicious_exec_path`)
    rather than a local list, so the definition of "system binary" and "staging
    directory" stays consistent across analyzers.
 6. **Language is "consistent with", never a verdict** — every `note()` ends
-   "consistent with masquerading" / "consistent with suspicious execution"; the
-   library docs state Amcache proves presence, not execution.
+   "consistent with masquerading" / "a suspicious presence that warrants correlation with
+   execution evidence"; the library docs state that an Amcache entry supports presence but does
+   not prove execution.
 
 ## Consequences
 

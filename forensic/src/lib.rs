@@ -8,18 +8,23 @@
 //!
 //! Findings are observations, never verdicts: Amcache establishes that a file with a given path
 //! and hash was present on the system — whether it is malicious is a correlation/tribunal
-//! question. Amcache presence is **not** proof of execution (it also inventories files that were
-//! merely installed or scanned); it is proof the file existed, with a hash to identify it.
+//! question. An Amcache entry is **not** proof of execution (Windows may inventory files that were
+//! merely installed or scanned); it supports a presence conclusion and may provide a hash to pivot
+//! on.
 //!
 //! Built on [`amcache_core`]; findings use [`forensicnomicon::report`].
 
 #![forbid(unsafe_code)]
 
+/// Human-readable, JSON, JSONL, and CSV report serializers.
+pub mod output;
+
 use forensicnomicon::report::{Category, Finding, Observation, Severity, Source, SubjectRef};
 
 // Re-export the core types that appear in this crate's public API.
 pub use amcache_core::{
-    Amcache, AmcacheDeviceEntry, AmcacheError, AmcacheFileEntry, AmcacheSchema,
+    Amcache, AmcacheDeviceEntry, AmcacheError, AmcacheFileEntry, AmcacheRegistryValue,
+    AmcacheRegistryValueData, AmcacheSchema,
 };
 
 /// The result of analyzing an Amcache hive.
@@ -60,8 +65,8 @@ pub enum AmcacheAnomaly {
 /// Decode an Amcache hive from bytes and audit it.
 ///
 /// # Errors
-/// [`AmcacheError`] if the bytes are not a readable Amcache hive (or use the unsupported legacy
-/// schema — see [`amcache_core`]).
+/// [`AmcacheError`] if the bytes are not a readable hive or contain neither supported modern nor
+/// legacy Amcache schema (see [`amcache_core`]).
 pub fn analyze_bytes(bytes: &[u8]) -> Result<AmcacheReport, AmcacheError> {
     let amcache = amcache_core::parse_bytes(bytes)?;
     let anomalies = audit(&amcache);
@@ -77,8 +82,7 @@ pub fn audit(amcache: &Amcache) -> Vec<AmcacheAnomaly> {
             continue;
         };
         let name = base_name(path);
-        let upper = path.to_uppercase();
-        let in_system = upper.contains(r"\SYSTEM32\") || upper.contains(r"\SYSWOW64\");
+        let in_system = is_windows_system_path(path);
         if forensicnomicon::processes::is_system32_binary(&name) && !in_system {
             out.push(AmcacheAnomaly::SystemBinaryRelocated {
                 name: name.to_uppercase(),
@@ -100,6 +104,34 @@ pub fn audit(amcache: &Amcache) -> Vec<AmcacheAnomaly> {
 /// The base name (last `\`/`/`-component) of a path.
 fn base_name(path: &str) -> String {
     path.rsplit(['\\', '/']).next().unwrap_or(path).to_string()
+}
+
+/// Whether a path is rooted in a canonical Windows system-binary directory.
+///
+/// Component matching avoids treating attacker-controlled paths such as
+/// `C:\Temp\System32\svchost.exe` or `C:\Windows.old\System32\svchost.exe` as trusted system
+/// locations merely because they contain a familiar directory name.
+fn is_windows_system_path(path: &str) -> bool {
+    let normalized = path.replace('/', "\\").to_uppercase();
+    let mut components = normalized.split('\\').filter(|part| !part.is_empty());
+    let Some(first) = components.next() else {
+        return false;
+    };
+    let drive = if first == "?" || first == "??" {
+        components.next()
+    } else {
+        Some(first)
+    };
+    let Some(drive) = drive else {
+        return false;
+    };
+    if drive.len() != 2 || !drive.ends_with(':') {
+        return false;
+    }
+    matches!(
+        (components.next(), components.next()),
+        (Some("WINDOWS"), Some("SYSTEM32" | "SYSWOW64"))
+    )
 }
 
 impl AmcacheAnomaly {
@@ -143,7 +175,7 @@ impl Observation for AmcacheAnomaly {
             ),
             AmcacheAnomaly::SuspiciousPath { .. } => format!(
                 "{name} at {path}{hash} sits in a directory commonly used to stage malware \
-                 — consistent with suspicious execution."
+                 — a suspicious presence that warrants correlation with execution evidence."
             ),
         }
     }
@@ -179,7 +211,7 @@ impl Observation for AmcacheAnomaly {
 #[must_use]
 pub fn to_finding(anomaly: &AmcacheAnomaly, scope: impl Into<String>) -> Finding {
     anomaly.to_finding(Source {
-        analyzer: "amcache-forensic".to_string(),
+        analyzer: "ys-amcache-parser".to_string(),
         scope: scope.into(),
         version: Some(env!("CARGO_PKG_VERSION").to_string()),
     })

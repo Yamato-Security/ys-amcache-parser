@@ -1,41 +1,100 @@
-# amcache-forensic
+# ys-amcache-parser
 
-[![CI](https://github.com/SecurityRonin/amcache-forensic/actions/workflows/ci.yml/badge.svg)](https://github.com/SecurityRonin/amcache-forensic/actions)
+[![CI](https://github.com/Yamato-Security/ys-amcache-parser/actions/workflows/ci.yml/badge.svg)](https://github.com/Yamato-Security/ys-amcache-parser/actions/workflows/ci.yml)
 [![Rust 1.85+](https://img.shields.io/badge/rust-1.85%2B-orange.svg)](https://www.rust-lang.org)
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
-[![Sponsor](https://img.shields.io/badge/sponsor-h4x0r-ea4aaa?logo=github-sponsors)](https://github.com/sponsors/h4x0r)
 
-**Prove what was on a Windows box — with a SHA-1 to pivot on — straight from `Amcache.hve`, on any OS.** A panic-free-by-construction reader for the modern (Windows 10/11) Amcache schema plus an analyzer that flags masquerading and staging-directory execution, every finding carrying the file hash.
+**Establish what was present on a Windows box — with a SHA-1 to pivot on when available — straight
+from `Amcache.hve`, on any OS.** A panic-free-by-construction reader for modern and legacy Amcache
+schemas plus an analyzer that flags high-signal masquerading and staging-directory presence.
+
+This project is a Yamato Security-maintained fork of
+[`SecurityRonin/amcache-forensic`](https://github.com/SecurityRonin/amcache-forensic).
+The complete upstream Git history and Apache-2.0 license are retained. Yamato Security's changes
+add richer forensic metadata and structured output while preserving the original project's
+cross-platform parser and attribution.
+
+The command remains `amcache4n6` for upstream CLI compatibility. The fork's internal crates are
+versioned `0.2.0` and are not published to crates.io under the upstream package names.
 
 ## Run it
 
 ```console
-$ cargo install amcache-forensic          # installs the amcache4n6 binary
-$ amcache4n6 /path/to/Amcache.hve
+$ git clone https://github.com/Yamato-Security/ys-amcache-parser.git
+$ cd ys-amcache-parser
+$ cargo build --release
+$ ./target/release/amcache4n6 /path/to/Amcache.hve
 Amcache: 123 file entries, 189 device entries
 Findings (4):
   [MEDIUM] AMCACHE-SUSPICIOUS-PATH  c:\users\testuser\downloads\sysmon\sysmon64.exe
-    sysmon64.exe at c:\users\testuser\downloads\sysmon\sysmon64.exe (SHA-1 71f5e906848b8e94e951551a08a4c9a045f19a03) sits in a directory commonly used to stage malware — consistent with suspicious execution.
+    sysmon64.exe at c:\users\testuser\downloads\sysmon\sysmon64.exe (SHA-1 71f5e906848b8e94e951551a08a4c9a045f19a03) sits in a directory commonly used to stage malware — a suspicious presence that warrants correlation with execution evidence.
   [MEDIUM] AMCACHE-SUSPICIOUS-PATH  c:\users\testuser\appdata\local\temp\…\ninite.exe
     ninite.exe … (SHA-1 ba7f0b553fe4eb017d2a2b2451f7a3e6ff2b521d) …
 ```
 
-`--files` lists every inventoried executable (path, SHA-1, record time); `--devices` lists the PnP/USB devices.
+The summary and findings are always included in every format. Use `--files` or `--devices` to add
+the corresponding complete records, or `--all` for both. With no selector, no detailed file or
+device rows are included.
+
+```console
+# Complete, pretty-printed JSON document
+$ ./target/release/amcache4n6 --all --format json \
+    --output amcache.json /path/to/Amcache.hve
+
+# Streamable JSON Lines, suitable for jq
+$ ./target/release/amcache4n6 --all --format jsonl /path/to/Amcache.hve \
+    | jq 'select(.record_type == "file" and .publisher != null)'
+
+# Separate homogeneous CSV tables for summary, findings, files, and devices
+$ ./target/release/amcache4n6 --all --format csv \
+    --output amcache-csv /path/to/Amcache.hve
+```
+
+JSON and JSONL use the versioned `output_schema_version` field. CSV requires an output directory
+because file, device, and finding records have different schemas; all four tables are replaced on
+each run, and unselected detail tables contain only their header. List-valued registry data is a
+JSON array in JSON/JSONL and a compact JSON array inside the corresponding CSV cell. Raw `FILETIME`,
+USN, and size values are decimal strings so JavaScript consumers do not lose 64-bit precision. See
+the [output schema documentation](docs/output.md) for every field.
+
+> **CSV safety:** evidence strings are preserved verbatim. Spreadsheet software may interpret
+> cells beginning with `=`, `+`, `-`, `@`, tab, or carriage return as formulas. Import CSV as text
+> or inspect it with a forensic-safe viewer; the parser deliberately does not mutate evidence to
+> make it spreadsheet-safe.
 
 ## What it decodes
 
 Both Amcache schemas (`C:\Windows\AppCompat\Programs\Amcache.hve`); `Amcache::schema` reports which:
 
-- **Modern (Windows 10/11)** — `InventoryApplicationFile` → `AmcacheFileEntry` (path, **SHA-1** from the `FileId`, publisher, version, product, binary type, size, record `FILETIME`); `InventoryDevicePnp` → `AmcacheDeviceEntry` (description, hardware id, manufacturer, model, class).
+- **Modern (Windows 10/11)** — all standard fields from `InventoryApplicationFile`, including raw
+  `FileId`, normalized **SHA-1**, SHA-256 when present, path, original name, description, publisher,
+  file/product versions, binary type, size, language, link date, PE/OS flags, AppX identity, USN,
+  and both formatted and raw record time. All standard `InventoryDevicePnp` fields are retained,
+  including hardware/compatible IDs, class and container IDs, driver/INF/provider/service metadata,
+  install dates and state, filters, interfaces, stack IDs, and location paths. Multi-string values
+  retain every item. Every source registry value is also retained with its registry type, decoded
+  form when available, and exact raw bytes as hexadecimal, so new and legacy-only fields survive
+  schema changes.
 - **Legacy (Windows 8/8.1, Server 2012 R2)** — the pre-1607 `Root\File\{volume-GUID}\…` layout with numbered values (`15`=path, `101`=SHA-1, `100`=program id, `0`=product, `1`=publisher) → `AmcacheFileEntry`. Legacy hives carry no device inventory.
 
-> **Amcache is evidence of *presence*, not proof of *execution*** — it also inventories files that were installed or scanned. Its value is the path plus a hash to identify the file. Findings are observations ("consistent with …"), never verdicts.
+The current parser supports `InventoryApplicationFile`, `InventoryDevicePnp`, and legacy
+`Root\File`. Other `Inventory*` branches are outside the current output schema. It reads the hive
+as supplied and does not replay adjacent transaction logs (`Amcache.hve.LOG1`/`.LOG2`).
+
+> **Amcache is evidence of *presence*, not proof of *execution*** — it also inventories files that
+> were installed or scanned. Its value is the path plus a hash to identify the file. Findings are
+> observations ("consistent with …"), never verdicts.
+>
+> **Publisher is recorded metadata, not signature validation.** A populated Publisher field does
+> not establish that the file was Authenticode-signed or that a signature was valid at collection
+> time. Verify the original executable separately when trust or authenticity matters.
 
 ## Layers
 
 - **`amcache-core`** — `parse_bytes(&[u8]) -> Amcache`. Walks the hive with [`winreg-core`], `#![forbid(unsafe_code)]`, panic-free by lint.
-- **`amcache-forensic`** — `analyze_bytes` + `audit` (graded `forensicnomicon` findings, each with the SHA-1 as a hash subject) and the `amcache4n6` CLI.
+- **`amcache-forensic`** — `analyze_bytes` + `audit` (graded `forensicnomicon` findings with the
+  SHA-1 as a hash subject when available) and the `amcache4n6` CLI.
 
 ## Validation
 
@@ -59,4 +118,5 @@ Tier-1 against **real DFIRArtifactMuseum hives** (MIT) from **four Windows syste
 
 ---
 
-[Privacy Policy](https://securityronin.github.io/amcache-forensic/privacy/) · [Terms of Service](https://securityronin.github.io/amcache-forensic/terms/) · © 2026 Security Ronin Ltd
+Originally developed by [Security Ronin](https://github.com/SecurityRonin). Modified and
+maintained by [Yamato Security](https://github.com/Yamato-Security) under the Apache-2.0 license.

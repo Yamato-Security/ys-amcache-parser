@@ -10,18 +10,92 @@ permissions:
   contents: read
 
 jobs:
-  # fmt · clippy · test (3 OS) · MSRV · cargo-deny · cargo-vet · secret scan ·
-  # fuzz build-check · rustdoc · 100% per-line coverage · path-dep gate.
-  #
-  # No inputs: this repo already enforced a 100% per-line gate at
-  # `--workspace --all-features`, which is exactly the shared workflow's default,
-  # and MSRV is read from rust-version. Anything that needed configuring would be
-  # a behaviour change smuggled in by an adoption PR, so there is nothing here.
-  ci:
-    uses: SecurityRonin/fleet-ci/.github/workflows/rust-ci.yml@85c7263e5e1a25a090f602419ac27f87aeb1d1e3
-    with:
-      # CARRIED ACROSS. The replaced workflow excluded the CLI shell from the
-      # coverage gate; without this, adoption newly demands 100% line coverage
-      # of a binary this repo has never gated. Verified load-bearing — the
-      # pattern matches a real file here.
-      coverage-ignore-regex: '(^|/)src/(main\.rs|bin/)'
+  msrv:
+    name: Minimum supported Rust 1.85
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Install minimum supported toolchain
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        with:
+          toolchain: 1.85.0
+
+      - name: Check workspace on MSRV
+        run: cargo check --workspace --all-targets --all-features
+
+  supply-chain:
+    name: Advisories, licenses, and vetted dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        with:
+          toolchain: 1.96.0
+
+      - name: Install pinned policy tools
+        run: |
+          cargo install cargo-deny --version 0.20.2 --locked
+          cargo install cargo-vet --version 0.10.3 --locked
+
+      - name: Check advisories, licenses, bans, and sources
+        run: cargo deny check
+
+      - name: Check dependency audits
+        run: cargo vet --locked
+
+  quality:
+    name: Format, lint, and document
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        with:
+          toolchain: 1.96.0
+          components: clippy,rustfmt
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run Clippy
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+      - name: Build documentation
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc --workspace --all-features --no-deps
+
+      - name: Compile fuzz targets
+        run: cargo check --manifest-path fuzz/Cargo.toml --all-targets
+
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+        with:
+          toolchain: 1.96.0
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+
+      - name: Run tests
+        run: cargo test --workspace --all-features

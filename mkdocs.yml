@@ -1,7 +1,7 @@
-site_name: amcache-forensic
-site_url: https://securityronin.github.io/amcache-forensic/
-repo_url: https://github.com/SecurityRonin/amcache-forensic
-repo_name: SecurityRonin/amcache-forensic
+site_name: ys-amcache-parser
+site_url: https://yamato-security.github.io/ys-amcache-parser/
+repo_url: https://github.com/Yamato-Security/ys-amcache-parser
+repo_name: Yamato-Security/ys-amcache-parser
 edit_uri: edit/main/docs/
 
 theme:
@@ -41,13 +41,10 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Output formats and schema: output.md
   - Validation: validation.md
-  - Privacy Policy: privacy.md
-  - Terms of Service: terms.md
 
 plugins:
   - search
 
-# Directory URLs (/privacy/, /terms/) — matches the SecurityRonin README footer
-# standard (…/<repo>/privacy/). Flat .html URLs would 404 the footer links.
 use_directory_urls: true

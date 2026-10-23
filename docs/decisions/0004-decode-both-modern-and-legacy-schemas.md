@@ -6,7 +6,7 @@ Status: Accepted
 ## Context
 
 Amcache changed layout across Windows versions. Windows 10 1607+ and Windows 11
-store execution/presence evidence under `Root\InventoryApplicationFile` (named
+store application-inventory and file-presence evidence under `Root\InventoryApplicationFile` (named
 values: `Name`, `LowerCaseLongPath`, `FileId`, …) plus a `Root\InventoryDevicePnp`
 device inventory. Windows 8/8.1 and Server 2012 R2 use the older
 `Root\File\{volume-GUID}\{file-reference}` layout with **numbered** values

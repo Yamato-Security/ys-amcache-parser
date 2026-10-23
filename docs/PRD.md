@@ -1,20 +1,21 @@
-# amcache-forensic — Product Requirements
+# ys-amcache-parser — Product Requirements
 
 *A reverse-written intent document, grounded in a same-session read of the repo
 (`core/src/lib.rs`, `forensic/src/lib.rs`, `forensic/src/bin/amcache4n6.rs`, the
 workspace manifests, and the git history, 2026-07-24). The load-bearing decisions
 live as ADRs [0001](decisions/0001-two-crate-core-forensic-split.md)–[0008](decisions/0008-cli-named-amcache4n6.md)
-under [`docs/decisions/`](decisions/). Part of the SecurityRonin forensic fleet
-described in `ronin-issen/CLAUDE.md`.*
+under `docs/decisions/`. Originally developed as part of the Security Ronin forensic
+fleet; now maintained as a Yamato Security fork with the upstream history retained.*
 
 ## Executive Summary
 
-`amcache-forensic` turns a Windows `Amcache.hve` hive into an inventory of every
-executable and PnP device the system catalogued — each executable carrying its
-**SHA-1**, the hash an examiner pivots on — and flags a small, high-precision set of
-anomalies (a system-binary name at the wrong path; execution from a staging
-directory). It runs on **any OS** from a single static binary (`amcache4n6`), needs
-no Windows and no runtime dependencies, and never modifies the evidence.
+`ys-amcache-parser` turns a Windows `Amcache.hve` hive into an inventory of every
+supported executable and PnP-device record — retaining every source registry value and the
+**SHA-1** when Windows recorded one — and flags a small, high-precision set of
+anomalies (a system-binary name at the wrong path; presence in a staging directory). It runs on
+**any supported OS** as one native CLI (`amcache4n6`), needs no Windows-only libraries or external
+application runtime, and never modifies the evidence. Normal builds use the target platform's
+standard C runtime; fully static packaging depends on the chosen Rust target and release process.
 
 Two crates carry it: **`amcache-core`** decodes the hive (both the modern
 Windows 10/11 and legacy Windows 8/Server 2012 R2 schemas) into typed entries;
@@ -43,21 +44,21 @@ Primary users:
 
 - **Decodes both Amcache schemas**, auto-detected (ADR 0004):
   - *Modern* (Windows 10 1607+ / 11): `Root\InventoryApplicationFile` →
-    `AmcacheFileEntry` (name, full lower-case path, SHA-1, publisher, version,
-    product, binary type, size, record FILETIME); `Root\InventoryDevicePnp` →
-    `AmcacheDeviceEntry` (description, hardware id, manufacturer, model, class).
+    `AmcacheFileEntry` (complete standard application-file metadata);
+    `Root\InventoryDevicePnp` → `AmcacheDeviceEntry` (complete standard PnP metadata).
+    Every source value is also retained with registry type, decoded form, and exact raw bytes.
   - *Legacy* (Windows 8/8.1 / Server 2012 R2): the pre-1607
     `Root\File\{volume-GUID}\…` numbered-value layout → `AmcacheFileEntry`
     (legacy hives carry no device inventory).
-- **Emits the correct SHA-1** — the `FileId`/`101` value with its leading padding
-  stripped (ADR 0005), lower-cased, matching AmcacheParser and regipy byte-for-byte.
+- **Emits the correct SHA-1** — the valid 40-hex-character suffix of `FileId`/`101`
+  (ADR 0005), lower-cased, matching AmcacheParser and regipy byte-for-byte.
 - **Grades two high-precision anomalies** (ADR 0006):
   `AMCACHE-SYSTEM-BINARY-RELOCATED` (High, `T1036.005`) and
-  `AMCACHE-SUSPICIOUS-PATH` (Medium, `T1204`), each carrying the file's SHA-1 as a
-  hash subject, phrased "consistent with …" — observations, never verdicts.
-- **`amcache4n6` CLI** (ADR 0008): `amcache4n6 <Amcache.hve> [--files] [--devices]`
-  prints the entry counts and findings; `--files` lists every inventoried
-  executable (record time, SHA-1, path); `--devices` lists PnP/USB devices.
+  `AMCACHE-SUSPICIOUS-PATH` (Medium, `T1204`), carrying the file's SHA-1 as a hash subject when
+  available and phrased "consistent with …" — observations, never verdicts.
+- **`amcache4n6` CLI** (ADR 0008): selectors add complete file/device records to the always-present
+  summary and findings. It emits human-readable text, versioned JSON, streamable JSONL, or separate
+  homogeneous CSV tables.
 - **Reads read-only, panic-free, on untrusted input** — `#![forbid(unsafe_code)]`,
   `unwrap_used`/`expect_used` denied, fuzzed parse + audit pipelines (ADR 0003).
 
@@ -69,6 +70,7 @@ Primary users:
   `forensicnomicon::report` findings.
 - Ship a cross-platform, scriptable CLI and a reusable library API
   (`parse_bytes`, `analyze_bytes`, `audit`).
+- Preserve known, legacy-only, and future registry metadata in versioned machine-readable output.
 
 ## Non-Goals
 
@@ -82,7 +84,7 @@ Primary users:
   explicitly; correlation into an execution conclusion is Issen's/the tribunal's job.
 - **Not an exhaustive classifier.** The analyzer is a high-precision triage signal
   (two codes); broad enumeration is the CLI's `--files`/`--devices` listing.
-- **Not a transaction-log / `Amcache.hve.LOG*` merger** — out of scope for v1.
+- **Not a transaction-log / `Amcache.hve.LOG*` merger** — out of scope for the current release.
 
 ## Artifact Family
 

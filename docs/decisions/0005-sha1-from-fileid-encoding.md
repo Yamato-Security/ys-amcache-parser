@@ -14,21 +14,20 @@ matches no other tool's output and no VirusTotal/threat-intel lookup — the exa
 encoding is documented in libyal's `dtformats` "AMCache.hve format" reference and
 confirmed against two independent oracles.
 
-Evidence: `core/src/lib.rs` `sha1_from_file_id` — takes the last 40 chars
-(`id[id.len() - 40..]`), lower-cased, guarded by `id.len() >= 40`; the module doc
-("the `FileId` value with its leading `0000` padding removed (its last 40 hex
-chars)"); `docs/validation.md` byte-for-byte matches against Eric Zimmerman's
+Evidence: `core/src/lib.rs` `sha1_from_file_id` — uses checked string slicing and accepts the last
+40 characters only when they are valid ASCII hexadecimal, then lower-cases them;
+`docs/validation.md` documents byte-for-byte matches against Eric Zimmerman's
 `AmcacheParser` and `regipy` (`7z.exe` →
 `1189cebeb8ffed7316f98b895ff949a726f4026f`).
 
 ## Decision
 
 1. **Derive the digest from structure, not a fixed offset into fixed input**: take
-   the trailing 40 characters of the trimmed `FileId`, so the rule holds regardless
-   of pad length or surrounding whitespace, and works identically for the modern
+   the trailing 40 ASCII hexadecimal characters of the trimmed `FileId`, so the rule holds
+   regardless of pad length or surrounding whitespace, and works identically for the modern
    `FileId` and the legacy `101` value.
-2. **Return `None` when there is no usable hash** (`id.len() < 40`) — common for
-   Store/AppX binaries — rather than emitting a truncated or fabricated value.
+2. **Return `None` when there is no usable hash** (too short, invalid UTF-8 boundary, or non-hex
+   suffix) — common for Store/AppX binaries — rather than emitting a truncated or fabricated value.
 3. **Normalize to lower-case hex** so hashes compare and dedupe cleanly across
    entries and against oracles.
 4. **Validate against independent oracles on real hives** (ADR is backed by the
@@ -40,6 +39,6 @@ chars)"); `docs/validation.md` byte-for-byte matches against Eric Zimmerman's
 
 - The SHA-1 the tool prints is the same digest AmcacheParser and regipy print, so
   it drops straight into threat-intel and cross-artifact correlation.
-- The hash surfaces as a first-class `SubjectRef { scheme: "hash", kind: "sha1" }`
-  on every finding (see ADR 0006).
+- When present, the hash surfaces as a first-class
+  `SubjectRef { scheme: "hash", kind: "sha1" }` on findings (see ADR 0006).
 - No spurious hash on hash-less entries.

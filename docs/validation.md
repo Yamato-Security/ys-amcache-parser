@@ -18,5 +18,6 @@ Both oracles agree with `amcache-core` on every count. Sample hashes match byte-
 `f0032dfb7e5d67dd10568e61787a4a3032ff55f5` (legacy). `AmcacheParser` is run with `--nl` (no
 transaction-log replay) to match a plain hive read.
 
-The `SHA-1` is the `FileId`/`101` value with its leading `0000` padding removed (the last 40 hex
-chars). Committed fixtures and provenance are in `core/tests/data/README.md`.
+The `SHA-1` is the valid 40-hex-character suffix of the `FileId`/`101` value (normally following
+leading `0000` padding). Malformed/non-hex identifiers are retained raw but are not mislabeled as a
+hash. Committed fixtures and provenance are in `core/tests/data/README.md`.
