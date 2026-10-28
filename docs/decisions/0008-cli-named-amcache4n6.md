@@ -1,7 +1,10 @@
 # 8. The examiner-facing CLI is named amcache4n6 (full artifact name)
 
 Date: 2026-07-24
-Status: Accepted
+Status: Superseded (2026-10-28)
+
+Fork note (2026-10-28): Yamato Security names every parser's command after its repository, so the
+command is now `ys-amcache-parser`. The record below is upstream's decision, kept as it was.
 
 Fork note (2026-10-24): Yamato Security retains the `amcache4n6` command for compatibility. The
 fork's crates are versioned 0.2.0, are not published under the upstream crates.io names, and are

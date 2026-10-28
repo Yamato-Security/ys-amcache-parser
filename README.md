@@ -15,8 +15,9 @@ The complete upstream Git history and Apache-2.0 license are retained. Yamato Se
 add richer forensic metadata and structured output while preserving the original project's
 cross-platform parser and attribution.
 
-The command remains `amcache4n6` for upstream CLI compatibility. The fork's internal crates are
-versioned `0.2.0` and are not published to crates.io under the upstream package names.
+The command is named after the repository, `ys-amcache-parser` (upstream's was `amcache4n6`). The
+fork's internal crates are versioned `0.2.0` and are not published to crates.io under the upstream
+package names.
 
 ## Run it
 
@@ -24,7 +25,7 @@ versioned `0.2.0` and are not published to crates.io under the upstream package 
 $ git clone https://github.com/Yamato-Security/ys-amcache-parser.git
 $ cd ys-amcache-parser
 $ cargo build --release
-$ ./target/release/amcache4n6 /path/to/Amcache.hve
+$ ./target/release/ys-amcache-parser /path/to/Amcache.hve
 Amcache: 123 file entries, 189 device entries
 Findings (4):
   [MEDIUM] AMCACHE-SUSPICIOUS-PATH  c:\users\testuser\downloads\sysmon\sysmon64.exe
@@ -39,15 +40,15 @@ device rows are included.
 
 ```console
 # Complete, pretty-printed JSON document
-$ ./target/release/amcache4n6 --all --format json \
+$ ./target/release/ys-amcache-parser --all --format json \
     --output amcache.json /path/to/Amcache.hve
 
 # Streamable JSON Lines, suitable for jq
-$ ./target/release/amcache4n6 --all --format jsonl /path/to/Amcache.hve \
+$ ./target/release/ys-amcache-parser --all --format jsonl /path/to/Amcache.hve \
     | jq 'select(.record_type == "file" and .publisher != null)'
 
 # Separate homogeneous CSV tables for summary, findings, files, and devices
-$ ./target/release/amcache4n6 --all --format csv \
+$ ./target/release/ys-amcache-parser --all --format csv \
     --output amcache-csv /path/to/Amcache.hve
 ```
 
@@ -94,7 +95,7 @@ as supplied and does not replay adjacent transaction logs (`Amcache.hve.LOG1`/`.
 
 - **`amcache-core`** — `parse_bytes(&[u8]) -> Amcache`. Walks the hive with [`winreg-core`], `#![forbid(unsafe_code)]`, panic-free by lint.
 - **`amcache-forensic`** — `analyze_bytes` + `audit` (graded `forensicnomicon` findings with the
-  SHA-1 as a hash subject when available) and the `amcache4n6` CLI.
+  SHA-1 as a hash subject when available) and the `ys-amcache-parser` CLI.
 
 ## Validation
 

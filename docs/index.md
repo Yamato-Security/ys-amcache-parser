@@ -5,20 +5,20 @@ devices — on any OS.
 
 `amcache-core` is the reader (`parse_bytes(&[u8]) -> Amcache`, modern Windows 10/11 and legacy
 `Root\File`); `amcache-forensic` adds graded findings (carrying SHA-1 when available) and the
-**`amcache4n6`** CLI.
+**`ys-amcache-parser`** CLI.
 
 ```console
 $ git clone https://github.com/Yamato-Security/ys-amcache-parser.git
 $ cd ys-amcache-parser
 $ cargo build --release
-$ ./target/release/amcache4n6 /path/to/Amcache.hve
+$ ./target/release/ys-amcache-parser /path/to/Amcache.hve
 ```
 
 Export every supported file and device field as JSON or as separate CSV tables:
 
 ```console
-$ ./target/release/amcache4n6 --all --format json --output amcache.json /path/to/Amcache.hve
-$ ./target/release/amcache4n6 --all --format csv --output amcache-csv /path/to/Amcache.hve
+$ ./target/release/ys-amcache-parser --all --format json --output amcache.json /path/to/Amcache.hve
+$ ./target/release/ys-amcache-parser --all --format csv --output amcache-csv /path/to/Amcache.hve
 ```
 
 The summary and findings are always emitted. The `--files`, `--devices`, and `--all` selectors add

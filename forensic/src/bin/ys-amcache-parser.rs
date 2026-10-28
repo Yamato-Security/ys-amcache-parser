@@ -1,4 +1,4 @@
-//! `amcache4n6` — cross-platform Windows `Amcache.hve` parser and forensic analyzer.
+//! `ys-amcache-parser` — cross-platform Windows `Amcache.hve` parser and forensic analyzer.
 #![forbid(unsafe_code)]
 
 use std::ffi::OsString;
@@ -15,7 +15,7 @@ use amcache_forensic::output::{
 const USAGE: &str = "\
 Cross-platform Windows Amcache.hve parser and forensic analyzer
 
-Usage: amcache4n6 [OPTIONS] <Amcache.hve>
+Usage: ys-amcache-parser [OPTIONS] <Amcache.hve>
 
 Options:
       --files              Add complete file-entry records
@@ -74,18 +74,18 @@ fn main() -> ExitCode {
             ExitCode::SUCCESS
         }
         Ok(ParseResult::Version) => {
-            println!("amcache4n6 {}", env!("CARGO_PKG_VERSION"));
+            println!("ys-amcache-parser {}", env!("CARGO_PKG_VERSION"));
             ExitCode::SUCCESS
         }
         Ok(ParseResult::Run(cli)) => match run(&cli) {
             Ok(()) => ExitCode::SUCCESS,
             Err(error) => {
-                eprintln!("amcache4n6: {error}");
+                eprintln!("ys-amcache-parser: {error}");
                 ExitCode::FAILURE
             }
         },
         Err(error) => {
-            eprintln!("amcache4n6: {error}\n\n{USAGE}");
+            eprintln!("ys-amcache-parser: {error}\n\n{USAGE}");
             ExitCode::from(2)
         }
     }

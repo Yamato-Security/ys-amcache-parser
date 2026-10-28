@@ -1,7 +1,7 @@
 # ys-amcache-parser — Product Requirements
 
 *A reverse-written intent document, grounded in a same-session read of the repo
-(`core/src/lib.rs`, `forensic/src/lib.rs`, `forensic/src/bin/amcache4n6.rs`, the
+(`core/src/lib.rs`, `forensic/src/lib.rs`, `forensic/src/bin/ys-amcache-parser.rs`, the
 workspace manifests, and the git history, 2026-07-24). The load-bearing decisions
 live as ADRs [0001](decisions/0001-two-crate-core-forensic-split.md)–[0008](decisions/0008-cli-named-amcache4n6.md)
 under `docs/decisions/`. Originally developed as part of the Security Ronin forensic
@@ -13,13 +13,13 @@ fleet; now maintained as a Yamato Security fork with the upstream history retain
 supported executable and PnP-device record — retaining every source registry value and the
 **SHA-1** when Windows recorded one — and flags a small, high-precision set of
 anomalies (a system-binary name at the wrong path; presence in a staging directory). It runs on
-**any supported OS** as one native CLI (`amcache4n6`), needs no Windows-only libraries or external
-application runtime, and never modifies the evidence. Normal builds use the target platform's
+**any supported OS** as one native CLI (`ys-amcache-parser`), needs no Windows-only libraries or
+external application runtime, and never modifies the evidence. Normal builds use the target platform's
 standard C runtime; fully static packaging depends on the chosen Rust target and release process.
 
 Two crates carry it: **`amcache-core`** decodes the hive (both the modern
 Windows 10/11 and legacy Windows 8/Server 2012 R2 schemas) into typed entries;
-**`amcache-forensic`** adds graded findings and ships the `amcache4n6` CLI. Decoding
+**`amcache-forensic`** adds graded findings and ships the `ys-amcache-parser` CLI. Decoding
 is validated Tier-1 against real hives from four Windows systems, cross-checked with
 two independent oracles (Eric Zimmerman's `AmcacheParser` and `regipy`).
 
@@ -56,8 +56,8 @@ Primary users:
   `AMCACHE-SYSTEM-BINARY-RELOCATED` (High, `T1036.005`) and
   `AMCACHE-SUSPICIOUS-PATH` (Medium, `T1204`), carrying the file's SHA-1 as a hash subject when
   available and phrased "consistent with …" — observations, never verdicts.
-- **`amcache4n6` CLI** (ADR 0008): selectors add complete file/device records to the always-present
-  summary and findings. It emits human-readable text, versioned JSON, streamable JSONL, or separate
+- **`ys-amcache-parser` CLI** (ADR 0008, superseded): selectors add complete file/device records to
+  the always-present summary and findings. It emits human-readable text, versioned JSON, streamable JSONL, or separate
   homogeneous CSV tables.
 - **Reads read-only, panic-free, on untrusted input** — `#![forbid(unsafe_code)]`,
   `unwrap_used`/`expect_used` denied, fuzzed parse + audit pipelines (ADR 0003).

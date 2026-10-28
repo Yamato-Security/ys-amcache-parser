@@ -11,7 +11,7 @@ const HIVE: &str = concat!(
 );
 
 fn command() -> Command {
-    Command::new(env!("CARGO_BIN_EXE_amcache4n6"))
+    Command::new(env!("CARGO_BIN_EXE_ys-amcache-parser"))
 }
 
 fn temp_directory(label: &str) -> PathBuf {
@@ -30,7 +30,7 @@ fn json_stdout_is_uncontaminated_and_complete() {
     let output = command()
         .args(["--files", "--format", "json", HIVE])
         .output()
-        .expect("run amcache4n6");
+        .expect("run ys-amcache-parser");
     assert!(
         output.status.success(),
         "{}",
@@ -52,7 +52,7 @@ fn invalid_format_is_a_usage_error() {
     let output = command()
         .args(["--format", "xml", HIVE])
         .output()
-        .expect("run amcache4n6");
+        .expect("run ys-amcache-parser");
     assert_eq!(output.status.code(), Some(2));
     assert!(String::from_utf8_lossy(&output.stderr).contains("text, json, jsonl, or csv"));
 }
@@ -72,7 +72,7 @@ fn refusing_same_input_and_output_preserves_evidence() {
         .arg(&hive)
         .arg(&hive)
         .output()
-        .expect("run amcache4n6");
+        .expect("run ys-amcache-parser");
     assert_eq!(output.status.code(), Some(1));
     assert!(String::from_utf8_lossy(&output.stderr).contains("same file"));
     assert_eq!(std::fs::read(&hive).expect("reread copied hive"), before);

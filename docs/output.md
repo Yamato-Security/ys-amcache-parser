@@ -1,13 +1,13 @@
 # Output formats and schema
 
-`amcache4n6` supports human-readable text plus versioned JSON, JSON Lines, and CSV output. The
+`ys-amcache-parser` supports human-readable text plus versioned JSON, JSON Lines, and CSV output. The
 summary and findings are always present. `--files`, `--devices`, or `--all` add detailed inventory
 records consistently in every format.
 
 ```console
-amcache4n6 --all --format json  --output amcache.json  Amcache.hve
-amcache4n6 --all --format jsonl --output amcache.jsonl Amcache.hve
-amcache4n6 --all --format csv   --output amcache-csv   Amcache.hve
+ys-amcache-parser --all --format json  --output amcache.json  Amcache.hve
+ys-amcache-parser --all --format jsonl --output amcache.jsonl Amcache.hve
+ys-amcache-parser --all --format csv   --output amcache-csv   Amcache.hve
 ```
 
 Text, JSON, and JSONL use standard output unless `--output` is given. Use `--output -` explicitly
@@ -20,7 +20,7 @@ One JSON document contains:
 ```json
 {
   "output_schema_version": 1,
-  "tool": { "name": "amcache4n6", "version": "0.2.0" },
+  "tool": { "name": "ys-amcache-parser", "version": "0.2.0" },
   "source": "Amcache.hve",
   "amcache_schema": "modern",
   "summary": {},
@@ -43,7 +43,7 @@ The deterministic order is summary, findings, files, then devices. Embedded newl
 are JSON-escaped and never split a record across physical lines.
 
 ```console
-amcache4n6 --all --format jsonl Amcache.hve \
+ys-amcache-parser --all --format jsonl Amcache.hve \
   | jq 'select(.record_type == "file" and .publisher != null)'
 ```
 
