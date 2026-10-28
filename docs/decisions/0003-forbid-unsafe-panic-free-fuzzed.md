@@ -17,8 +17,8 @@ provable `forbid(unsafe)` posture.
 
 Evidence: workspace `Cargo.toml` `[workspace.lints.rust] unsafe_code = "forbid"`
 plus `unwrap_used`/`expect_used = "deny"`; `#![forbid(unsafe_code)]` at the top of
-`core/src/lib.rs`, `forensic/src/lib.rs`, and `bin/amcache4n6.rs`; the README
-`unsafe forbidden` badge; the fuzz kit added in commit `4ea24ae`
+`core/src/lib.rs`, `forensic/src/lib.rs`, and `bin/ys-amcache-parser.rs` (formerly
+`bin/amcache4n6.rs`); the README `unsafe forbidden` badge; the fuzz kit added in commit `4ea24ae`
 (`fuzz/fuzz_targets/fuzz_parse.rs`, `fuzz_forensic.rs`) with `fuzz.yml`.
 
 ## Decision

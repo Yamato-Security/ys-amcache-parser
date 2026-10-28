@@ -635,7 +635,7 @@ fn json_report<'a>(
 
 const fn tool() -> Tool<'static> {
     Tool {
-        name: "amcache4n6",
+        name: "ys-amcache-parser",
         version: env!("CARGO_PKG_VERSION"),
     }
 }
