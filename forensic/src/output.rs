@@ -1,4 +1,4 @@
-//! Stable human-readable and machine-readable output for [`AmcacheReport`](crate::AmcacheReport).
+//! Stable human-readable and machine-readable output for [`AmcacheReport`].
 //!
 //! JSON and JSONL use a versioned schema. CSV is emitted as separate homogeneous tables because
 //! application-file, PnP-device, and finding records do not share a useful tabular schema.

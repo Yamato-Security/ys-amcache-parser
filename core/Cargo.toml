@@ -1,6 +1,6 @@
 [package]
-name = "amcache-core"
-version = "0.2.0"
+name = "ys-amcache-parser-core"
+version = "1.0.0"
 publish = false
 edition.workspace = true
 rust-version.workspace = true
@@ -12,6 +12,10 @@ categories = ["parser-implementations"]
 repository.workspace = true
 readme.workspace = true
 exclude = ["tests/data/", "fuzz/"]
+
+# The library keeps its name, so code using it reads `use amcache_core::…`.
+[lib]
+name = "amcache_core"
 
 [dependencies]
 winreg-core = { workspace = true }

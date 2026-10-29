@@ -5,15 +5,15 @@ members = ["core", "forensic"]
 # Single source of truth for shared fields (DRY). `version` is NOT hoisted — core and forensic
 # are versioned independently.
 [workspace.package]
-edition = "2021"
-rust-version = "1.85"
+edition = "2024"
+rust-version = "1.99"
 license = "Apache-2.0"
-authors = ["Albert Hui"]
+authors = ["Albert Hui", "Zach Mathis (@yamatosecurity)"]
 repository = "https://github.com/Yamato-Security/ys-amcache-parser"
 readme = "README.md"
 
 [workspace.dependencies]
-amcache-core = { path = "core", version = "0.2.0" }
+amcache-core = { package = "ys-amcache-parser-core", path = "core", version = "1.0.0" }
 # Generic REGF hive parser — Amcache IS a hive, so core walks its schema with winreg-core.
 winreg-core = "0.2"
 forensicnomicon = "1"

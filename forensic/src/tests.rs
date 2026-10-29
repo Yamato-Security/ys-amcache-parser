@@ -42,9 +42,11 @@ fn system_binary_in_system32_is_not_flagged() {
         file(r"D:/WINDOWS/SysWOW64/svchost.exe", None),
         file(r"\\?\C:\Windows\System32\svchost.exe", None),
     ]);
-    assert!(!audit(&am)
-        .iter()
-        .any(|x| matches!(x, AmcacheAnomaly::SystemBinaryRelocated { .. })));
+    assert!(
+        !audit(&am)
+            .iter()
+            .any(|x| matches!(x, AmcacheAnomaly::SystemBinaryRelocated { .. }))
+    );
 }
 
 #[test]
@@ -55,9 +57,11 @@ fn system_directory_name_elsewhere_does_not_bypass_masquerading_check() {
         r"c:\windows\system32-backup\svchost.exe",
     ] {
         let am = amcache_of(vec![file(path, None)]);
-        assert!(audit(&am)
-            .iter()
-            .any(|x| matches!(x, AmcacheAnomaly::SystemBinaryRelocated { .. })));
+        assert!(
+            audit(&am)
+                .iter()
+                .any(|x| matches!(x, AmcacheAnomaly::SystemBinaryRelocated { .. }))
+        );
     }
 }
 
@@ -84,7 +88,7 @@ fn benign_entry_and_pathless_entry_are_quiet() {
     let mut pathless = file(r"c:\x.exe", None);
     pathless.full_path = None;
     let am = amcache_of(vec![file(r"c:\program files\app\app.exe", None), pathless]);
-    assert!(audit(&am).is_empty());
+    assert_eq!(audit(&am), []);
 }
 
 #[test]
@@ -102,10 +106,10 @@ fn observation_maps_all_fields() {
         },
     ] {
         assert!(a.severity().is_some());
-        assert!(!a.code().is_empty());
-        assert!(!a.mitre().is_empty());
-        assert!(!a.note().is_empty());
-        assert!(!a.subjects().is_empty());
+        assert_ne!(a.code(), "");
+        assert_ne!(a.mitre().len(), 0);
+        assert_ne!(a.note(), "");
+        assert_ne!(a.subjects().len(), 0);
         let _ = to_finding(&a, "Amcache.hve");
     }
     // The relocated variant grades High/Concealment and includes the hash as a subject.
@@ -127,10 +131,12 @@ fn analyze_bytes_on_the_real_win10_hive() {
     assert_eq!(report.amcache.file_entries.len(), 123);
     assert_eq!(report.amcache.device_entries.len(), 189);
     // A clean baseline inventory raises no false masquerading finding on this hive.
-    assert!(!report
-        .anomalies
-        .iter()
-        .any(|a| matches!(a, AmcacheAnomaly::SystemBinaryRelocated { .. })));
+    assert!(
+        !report
+            .anomalies
+            .iter()
+            .any(|a| matches!(a, AmcacheAnomaly::SystemBinaryRelocated { .. }))
+    );
 }
 
 #[test]
