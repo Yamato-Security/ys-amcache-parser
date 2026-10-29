@@ -21,7 +21,7 @@ Two crates carry it: **`amcache-core`** decodes the hive (both the modern
 Windows 10/11 and legacy Windows 8/Server 2012 R2 schemas) into typed entries;
 **`amcache-forensic`** adds graded findings and ships the `ys-amcache-parser` CLI. Decoding
 is validated Tier-1 against real hives from four Windows systems, cross-checked with
-two independent oracles (Eric Zimmerman's `AmcacheParser` and `regipy`).
+two independent oracles (`regipy` and a second, independent Amcache parser).
 
 ## Problem & Users
 
@@ -51,7 +51,7 @@ Primary users:
     `Root\File\{volume-GUID}\…` numbered-value layout → `AmcacheFileEntry`
     (legacy hives carry no device inventory).
 - **Emits the correct SHA-1** — the valid 40-hex-character suffix of `FileId`/`101`
-  (ADR 0005), lower-cased, matching AmcacheParser and regipy byte-for-byte.
+  (ADR 0005), lower-cased, matching both oracles byte-for-byte.
 - **Grades two high-precision anomalies** (ADR 0006):
   `AMCACHE-SYSTEM-BINARY-RELOCATED` (High, `T1036.005`) and
   `AMCACHE-SUSPICIOUS-PATH` (Medium, `T1204`), carrying the file's SHA-1 as a hash subject when
@@ -96,8 +96,8 @@ single-format `core` + `forensic` split (ADR 0001).
 
 Tier-1 correctness against **real DFIRArtifactMuseum hives** (MIT-licensed) from
 four Windows systems — Windows 10 (two VMs), Windows 11, and Server 2012 R2 (legacy
-`Root\File`) — cross-checked against **two independent oracles**, Eric Zimmerman's
-`AmcacheParser` and `regipy`. Both oracles agree with `amcache-core` on every
+`Root\File`) — cross-checked against **two independent oracles**, `regipy` and
+a second, independent Amcache parser. Both oracles agree with `amcache-core` on every
 entry count, and sample hashes match byte-for-byte (`7z.exe` →
 `1189cebeb8ffed7316f98b895ff949a726f4026f`). Details and fixture provenance:
 [`docs/validation.md`](validation.md) and `core/tests/data/README.md`. The parse and

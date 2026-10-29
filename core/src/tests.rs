@@ -1,5 +1,5 @@
 //! Tier-1 validation against real DFIRArtifactMuseum Amcache hives (MIT), cross-checked with
-//! Eric Zimmerman's `AmcacheParser` and `regipy`. See `tests/data/README.md`.
+//! `regipy` and a second, independent Amcache parser. See `tests/data/README.md`.
 
 use super::*;
 
@@ -36,7 +36,7 @@ fn win10_7zip_entry_matches_the_oracle() {
         e.file_id.as_deref(),
         Some("00001189cebeb8ffed7316f98b895ff949a726f4026f")
     );
-    // FileId 00001189… → SHA-1 last-40 (AmcacheParser + a from-FileId read agree).
+    // FileId 00001189… → SHA-1 last-40 (the second parser and a from-FileId read agree).
     assert_eq!(
         e.sha1.as_deref(),
         Some("1189cebeb8ffed7316f98b895ff949a726f4026f")
@@ -157,7 +157,7 @@ fn win10_device_entry_preserves_extended_metadata_and_list_values() {
 #[test]
 fn legacy_root_file_schema_decodes() {
     // The Server 2012 R2 hive uses the pre-1607 Root\File schema — 136 file entries across
-    // volumes (AmcacheParser + regipy agree), no device entries.
+    // volumes (both oracles agree), no device entries.
     let am = parse_bytes(OLD_2012R2).unwrap();
     assert_eq!(am.schema, AmcacheSchema::Legacy);
     assert_eq!(am.file_entries.len(), 136);

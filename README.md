@@ -101,7 +101,7 @@ as supplied and does not replay adjacent transaction logs (`Amcache.hve.LOG1`/`.
 
 ## Validation
 
-Tier-1 against **real DFIRArtifactMuseum hives** (MIT) from **four Windows systems**, cross-checked with **two independent oracles** — Eric Zimmerman's `AmcacheParser` and `regipy`:
+Tier-1 against **real DFIRArtifactMuseum hives** (MIT) from **four Windows systems**, cross-checked with **two independent oracles** — `regipy` and a second, independent Amcache parser:
 
 | Hive | Files | Devices |
 |---|---|---|

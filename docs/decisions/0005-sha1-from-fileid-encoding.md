@@ -16,8 +16,8 @@ confirmed against two independent oracles.
 
 Evidence: `core/src/lib.rs` `sha1_from_file_id` — uses checked string slicing and accepts the last
 40 characters only when they are valid ASCII hexadecimal, then lower-cases them;
-`docs/validation.md` documents byte-for-byte matches against Eric Zimmerman's
-`AmcacheParser` and `regipy` (`7z.exe` →
+`docs/validation.md` documents byte-for-byte matches against both oracles,
+`regipy` and a second, independent Amcache parser (`7z.exe` →
 `1189cebeb8ffed7316f98b895ff949a726f4026f`).
 
 ## Decision
@@ -37,7 +37,7 @@ Evidence: `core/src/lib.rs` `sha1_from_file_id` — uses checked string slicing 
 
 ## Consequences
 
-- The SHA-1 the tool prints is the same digest AmcacheParser and regipy print, so
+- The SHA-1 the tool prints is the same digest both oracles print, so
   it drops straight into threat-intel and cross-artifact correlation.
 - When present, the hash surfaces as a first-class
   `SubjectRef { scheme: "hash", kind: "sha1" }` on findings (see ADR 0006).

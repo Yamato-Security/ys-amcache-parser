@@ -16,7 +16,7 @@
 //! their device list is empty; modern hives populate both.
 //!
 //! Field semantics follow libyal's `dtformats` "AMCache.hve format" documentation and are
-//! cross-validated against Eric Zimmerman's `AmcacheParser` and `regipy` (see `tests/`). The
+//! cross-validated against `regipy` and a second, independent Amcache parser (see `tests/`). The
 //! `SHA-1` is emitted when the `FileId` ends in 40 valid ASCII hexadecimal characters (normally
 //! the value after its leading `0000` padding).
 
