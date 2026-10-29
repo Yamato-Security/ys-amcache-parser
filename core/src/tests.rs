@@ -1,5 +1,5 @@
 //! Tier-1 validation against real DFIRArtifactMuseum Amcache hives (MIT), cross-checked with
-//! Eric Zimmerman's `AmcacheParser` and `regipy`. See `tests/data/README.md`.
+//! `regipy` and a second, independent Amcache parser. See `tests/data/README.md`.
 
 use super::*;
 
@@ -36,7 +36,7 @@ fn win10_7zip_entry_matches_the_oracle() {
         e.file_id.as_deref(),
         Some("00001189cebeb8ffed7316f98b895ff949a726f4026f")
     );
-    // FileId 00001189… → SHA-1 last-40 (AmcacheParser + a from-FileId read agree).
+    // FileId 00001189… → SHA-1 last-40 (the second parser and a from-FileId read agree).
     assert_eq!(
         e.sha1.as_deref(),
         Some("1189cebeb8ffed7316f98b895ff949a726f4026f")
@@ -59,10 +59,11 @@ fn win10_7zip_entry_matches_the_oracle() {
         format!("Root\\InventoryApplicationFile\\{}", e.key_name)
     );
     assert_eq!(e.source_volume_key_last_written_filetime, None);
-    assert!(e
-        .registry_values
-        .iter()
-        .any(|value| value.name == "Publisher"));
+    assert!(
+        e.registry_values
+            .iter()
+            .any(|value| value.name == "Publisher")
+    );
     // This older fixture predates these newer fields; absence remains distinct from false/empty.
     assert_eq!(e.is_pe_file, None);
     assert_eq!(e.sha256, None);
@@ -111,10 +112,11 @@ fn win10_device_entries_carry_a_description() {
     let am = parse_bytes(WIN10).unwrap();
     // Every device entry has a key name and a recorded write time; most carry a description.
     assert!(am.device_entries.iter().all(|d| !d.key_name.is_empty()));
-    assert!(am
-        .device_entries
-        .iter()
-        .any(|d| d.description.is_some() || d.bus_description.is_some()));
+    assert!(
+        am.device_entries
+            .iter()
+            .any(|d| d.description.is_some() || d.bus_description.is_some())
+    );
 }
 
 #[test]
@@ -149,17 +151,17 @@ fn win10_device_entry_preserves_extended_metadata_and_list_values() {
     assert_eq!(d.hwid.len(), 1);
     assert!(d.hwid[0].contains(','));
     // LocationPaths is a known field absent from this older fixture.
-    assert!(d.location_paths.is_empty());
+    assert_eq!(d.location_paths, Vec::<String>::new());
 }
 
 #[test]
 fn legacy_root_file_schema_decodes() {
     // The Server 2012 R2 hive uses the pre-1607 Root\File schema — 136 file entries across
-    // volumes (AmcacheParser + regipy agree), no device entries.
+    // volumes (both oracles agree), no device entries.
     let am = parse_bytes(OLD_2012R2).unwrap();
     assert_eq!(am.schema, AmcacheSchema::Legacy);
     assert_eq!(am.file_entries.len(), 136);
-    assert!(am.device_entries.is_empty());
+    assert_eq!(am.device_entries, Vec::<AmcacheDeviceEntry>::new());
     // C:\Windows\System32\vm3dservice.exe → SHA-1 (FileId 0000f0032dfb… last-40), oracle-matched.
     let e = am
         .file_entries
@@ -180,15 +182,17 @@ fn legacy_root_file_schema_decodes() {
     assert!(e.appx_package_full_name.is_none());
     assert!(e.source_key_path.starts_with("Root\\File\\"));
     assert!(e.source_volume_key_last_written_filetime.is_some());
-    assert!(e
-        .registry_values
-        .iter()
-        .any(|value| value.name == "16" && value.registry_type == "REG_DWORD"));
+    assert!(
+        e.registry_values
+            .iter()
+            .any(|value| value.name == "16" && value.registry_type == "REG_DWORD")
+    );
     assert!(e.registry_values.iter().any(|value| value.name == "17"));
-    assert!(e
-        .registry_values
-        .iter()
-        .all(|value| !value.raw_data_hex.is_empty()));
+    assert!(
+        e.registry_values
+            .iter()
+            .all(|value| !value.raw_data_hex.is_empty())
+    );
 }
 
 #[test]
@@ -236,5 +240,5 @@ fn sha1_from_file_id_strips_the_leading_padding() {
 #[test]
 fn raw_registry_bytes_are_lowercase_hex() {
     assert_eq!(bytes_to_hex(&[0x00, 0x7f, 0xa5, 0xff]), "007fa5ff");
-    assert!(bytes_to_hex(&[]).is_empty());
+    assert_eq!(bytes_to_hex(&[]), "");
 }

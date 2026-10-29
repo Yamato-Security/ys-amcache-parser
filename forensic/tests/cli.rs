@@ -36,15 +36,15 @@ fn json_stdout_is_uncontaminated_and_complete() {
         "{}",
         String::from_utf8_lossy(&output.stderr)
     );
-    assert!(output.stderr.is_empty());
+    assert_eq!(String::from_utf8_lossy(&output.stderr), "");
 
     let document: serde_json::Value =
         serde_json::from_slice(&output.stdout).expect("stdout is one JSON document");
     assert_eq!(document["summary"]["file_count"], 123);
     assert_eq!(document["summary"]["device_count"], 189);
     assert_eq!(document["files"].as_array().unwrap().len(), 123);
-    assert!(document["devices"].as_array().unwrap().is_empty());
-    assert!(!document["findings"].as_array().unwrap().is_empty());
+    assert_eq!(document["devices"], serde_json::json!([]));
+    assert_ne!(document["findings"].as_array().unwrap().len(), 0);
 }
 
 #[test]

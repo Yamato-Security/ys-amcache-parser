@@ -8,10 +8,10 @@ Both hives are from **DFIRArtifactMuseum** (<https://github.com/AndrewRathbun/DF
 | `amcache_win10.hve` | `Win10/APTSimulatorVM/Amcache.hve` | modern (`InventoryApplicationFile`) | `cc22b30f8410b607d107583fa6de8e53` |
 | `amcache_2012r2_old.hve` | `Win2012R2/StolenSzechuan/Amcache.hve` | legacy (`Root\File`) | (Server 2012 R2) |
 
-**Ground truth / oracles.** Cross-validated by two independent tools (`--nl`, no transaction-log
-replay, to match a plain hive read):
+**Ground truth / oracles.** Cross-validated by two independent tools (no transaction-log replay, to
+match a plain hive read):
 
-- **Eric Zimmerman's `AmcacheParser`** (built from source, `dotnet`): on `amcache_win10.hve` —
+- **A second, independent Amcache parser**: on `amcache_win10.hve` —
   124 file entries (20 unassociated + 104 associated), 189 device PnPs, 12 device containers, 90
   program entries. Sample: `7z.exe` `SHA1=1189cebeb8ffed7316f98b895ff949a726f4026f` at
   `c:\program files\7-zip\7z.exe`; `CompatTelRunner.exe`
@@ -19,8 +19,8 @@ replay, to match a plain hive read):
 - **`regipy`** (raw key/value cross-read): agrees — `Root\InventoryApplicationFile` = 123 subkeys,
   `Root\InventoryDevicePnp` = 189, `InventoryApplication` = 90, `InventoryDeviceContainer` = 12.
 
-(The `AmcacheParser` "124" vs `regipy`/this-crate "123" differ by one associated record that
-`AmcacheParser` derives from a program entry; both agree on the raw `InventoryApplicationFile`
+(That parser's "124" vs `regipy`/this-crate "123" differ by one associated record it derives
+from a program entry; both agree on the raw `InventoryApplicationFile`
 subkey set.) `FileId` → `SHA-1`: the digest is the value's last 40 hex chars (leading `0000` is
 padding).
 

@@ -9,7 +9,7 @@ use std::process::ExitCode;
 
 use amcache_forensic::analyze_bytes;
 use amcache_forensic::output::{
-    write_csv_directory, write_json, write_jsonl, write_text, OutputOptions,
+    OutputOptions, write_csv_directory, write_json, write_jsonl, write_text,
 };
 
 const USAGE: &str = "\
@@ -172,14 +172,15 @@ fn next_value(args: &mut impl Iterator<Item = OsString>, option: &str) -> Result
 }
 
 fn run(cli: &Cli) -> Result<(), Box<dyn std::error::Error>> {
-    if let Some(output) = cli.output.as_deref() {
-        if output.as_os_str() != "-" && paths_refer_to_same_file(&cli.input, output) {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "input and output paths refer to the same file",
-            )
-            .into());
-        }
+    if let Some(output) = cli.output.as_deref()
+        && output.as_os_str() != "-"
+        && paths_refer_to_same_file(&cli.input, output)
+    {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "input and output paths refer to the same file",
+        )
+        .into());
     }
     let bytes = std::fs::read(&cli.input).map_err(|error| {
         io::Error::new(error.kind(), format!("{}: {error}", cli.input.display()))

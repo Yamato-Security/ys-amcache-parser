@@ -3,26 +3,6 @@
 version = 4
 
 [[package]]
-name = "amcache-core"
-version = "0.2.0"
-dependencies = [
- "winreg-core",
-]
-
-[[package]]
-name = "amcache-forensic"
-version = "0.2.0"
-dependencies = [
- "amcache-core",
- "csv",
- "forensicnomicon",
- "same-file",
- "serde",
- "serde_json",
- "winreg-core",
-]
-
-[[package]]
 name = "array-init"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -433,6 +413,26 @@ checksum = "af272475b34a42d387930688120019e7ec99bbf79ecaa8c036d853cb2442a10e"
 dependencies = [
  "binrw",
  "bitflags 2.13.0",
+]
+
+[[package]]
+name = "ys-amcache-parser"
+version = "1.0.0"
+dependencies = [
+ "csv",
+ "forensicnomicon",
+ "same-file",
+ "serde",
+ "serde_json",
+ "winreg-core",
+ "ys-amcache-parser-core",
+]
+
+[[package]]
+name = "ys-amcache-parser-core"
+version = "1.0.0"
+dependencies = [
+ "winreg-core",
 ]
 
 [[package]]

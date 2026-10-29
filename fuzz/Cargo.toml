@@ -2,7 +2,7 @@
 name = "amcache-fuzz"
 version = "0.0.0"
 publish = false
-edition = "2021"
+edition = "2024"
 
 [package.metadata]
 cargo-fuzz = true
@@ -11,8 +11,8 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
-amcache-core = { path = "../core" }
-amcache-forensic = { path = "../forensic" }
+amcache-core = { package = "ys-amcache-parser-core", path = "../core" }
+amcache-forensic = { package = "ys-amcache-parser", path = "../forensic" }
 
 [[bin]]
 name = "fuzz_parse"

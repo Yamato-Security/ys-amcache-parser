@@ -1,7 +1,7 @@
 # ys-amcache-parser
 
 [![CI](https://github.com/Yamato-Security/ys-amcache-parser/actions/workflows/ci.yml/badge.svg)](https://github.com/Yamato-Security/ys-amcache-parser/actions/workflows/ci.yml)
-[![Rust 1.85+](https://img.shields.io/badge/rust-1.85%2B-orange.svg)](https://www.rust-lang.org)
+[![Rust 1.99+](https://img.shields.io/badge/rust-1.99%2B-orange.svg)](https://www.rust-lang.org)
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
@@ -15,9 +15,11 @@ The complete upstream Git history and Apache-2.0 license are retained. Yamato Se
 add richer forensic metadata and structured output while preserving the original project's
 cross-platform parser and attribution.
 
-The command is named after the repository, `ys-amcache-parser` (upstream's was `amcache4n6`). The
-fork's internal crates are versioned `0.2.0` and are not published to crates.io under the upstream
-package names.
+The command and the crates are named after the repository: the command `ys-amcache-parser`
+(upstream's was `amcache4n6`), the crates `ys-amcache-parser` (upstream's `amcache-forensic`;
+library `amcache_forensic`) and `ys-amcache-parser-core` (upstream's `amcache-core`; library
+`amcache_core`). They are version 1.0.0, by Albert Hui and Zach Mathis (@yamatosecurity), on Rust's
+2024 edition, require Rust 1.99, and are not published to crates.io.
 
 ## Run it
 
@@ -93,13 +95,13 @@ as supplied and does not replay adjacent transaction logs (`Amcache.hve.LOG1`/`.
 
 ## Layers
 
-- **`amcache-core`** — `parse_bytes(&[u8]) -> Amcache`. Walks the hive with [`winreg-core`], `#![forbid(unsafe_code)]`, panic-free by lint.
-- **`amcache-forensic`** — `analyze_bytes` + `audit` (graded `forensicnomicon` findings with the
+- **`ys-amcache-parser-core`** (library `amcache_core`) — `parse_bytes(&[u8]) -> Amcache`. Walks the hive with [`winreg-core`], `#![forbid(unsafe_code)]`, panic-free by lint.
+- **`ys-amcache-parser`** (library `amcache_forensic`) — `analyze_bytes` + `audit` (graded `forensicnomicon` findings with the
   SHA-1 as a hash subject when available) and the `ys-amcache-parser` CLI.
 
 ## Validation
 
-Tier-1 against **real DFIRArtifactMuseum hives** (MIT) from **four Windows systems**, cross-checked with **two independent oracles** — Eric Zimmerman's `AmcacheParser` and `regipy`:
+Tier-1 against **real DFIRArtifactMuseum hives** (MIT) from **four Windows systems**, cross-checked with **two independent oracles** — `regipy` and a second, independent Amcache parser:
 
 | Hive | Files | Devices |
 |---|---|---|

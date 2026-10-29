@@ -1,6 +1,6 @@
 [package]
-name = "amcache-forensic"
-version = "0.2.0"
+name = "ys-amcache-parser"
+version = "1.0.0"
 publish = false
 edition.workspace = true
 rust-version.workspace = true
@@ -11,6 +11,10 @@ keywords = ["forensics", "amcache", "windows", "dfir", "execution"]
 categories = ["command-line-utilities", "parser-implementations"]
 repository.workspace = true
 readme.workspace = true
+
+# The library keeps its name, so code using it reads `use amcache_forensic::…`.
+[lib]
+name = "amcache_forensic"
 
 [dependencies]
 amcache-core = { workspace = true }

@@ -16,10 +16,10 @@ url = "https://raw.githubusercontent.com/google/rust-crate-audits/main/audits.to
 [imports.mozilla]
 url = "https://raw.githubusercontent.com/mozilla/supply-chain/main/audits.toml"
 
-[policy.amcache-core]
+[policy.ys-amcache-parser]
 audit-as-crates-io = false
 
-[policy.amcache-forensic]
+[policy.ys-amcache-parser-core]
 audit-as-crates-io = false
 
 [[exemptions.binrw]]
