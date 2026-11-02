@@ -99,3 +99,17 @@ jobs:
 
       - name: Run tests
         run: cargo test --workspace --all-features
+
+  # Every Rust file carries the copyright and the RPL 1.5 License Notice (the RPL's Exhibit A).
+  license-notice:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - name: Every Rust file carries the RPL License Notice
+        run: |
+          missing=$(git ls-files '*.rs' | xargs grep -L 'subject to the Reciprocal Public License ("RPL") Version 1.5' || true)
+          if [ -n "$missing" ]; then
+            echo "::error::Add the copyright and the RPL License Notice, as at the top of the other Rust files, to:"
+            echo "$missing"
+            exit 1
+          fi

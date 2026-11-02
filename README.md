@@ -3,17 +3,17 @@
 [![CI](https://github.com/Yamato-Security/ys-amcache-parser/actions/workflows/ci.yml/badge.svg)](https://github.com/Yamato-Security/ys-amcache-parser/actions/workflows/ci.yml)
 [![Rust 1.99+](https://img.shields.io/badge/rust-1.99%2B-orange.svg)](https://www.rust-lang.org)
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance)
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
+[![License: RPL-1.5](https://img.shields.io/badge/License-RPL--1.5-blue.svg)](LICENSE)
 
 **Establish what was present on a Windows box — with a SHA-1 to pivot on when available — straight
 from `Amcache.hve`, on any OS.** A panic-free-by-construction reader for modern and legacy Amcache
 schemas plus an analyzer that flags high-signal masquerading and staging-directory presence.
 
 This project is a Yamato Security-maintained fork of
-[`SecurityRonin/amcache-forensic`](https://github.com/SecurityRonin/amcache-forensic).
-The complete upstream Git history and Apache-2.0 license are retained. Yamato Security's changes
-add richer forensic metadata and structured output while preserving the original project's
-cross-platform parser and attribution.
+[`SecurityRonin/amcache-forensic`](https://github.com/SecurityRonin/amcache-forensic). The complete
+upstream Git history is retained, and upstream's code stays under its Apache-2.0 license (see
+[License](#license)). Yamato Security's changes add richer forensic metadata and structured output
+while preserving the original project's cross-platform parser and attribution.
 
 The command and the crates are named after the repository: the command `ys-amcache-parser`
 (upstream's was `amcache4n6`), the crates `ys-amcache-parser` (upstream's `amcache-forensic`;
@@ -119,7 +119,16 @@ Tier-1 against **real DFIRArtifactMuseum hives** (MIT) from **four Windows syste
 | `AMCACHE-SYSTEM-BINARY-RELOCATED` | High | T1036.005 | A Windows system-binary name recorded at a non-`System32` path (masquerading). |
 | `AMCACHE-SUSPICIOUS-PATH` | Medium | T1204 | An executable inventoried from a common staging directory (Temp, Downloads, `$Recycle.Bin`, …). |
 
+## License
+
+ys-amcache-parser is copyright Shirofune Security Co., Ltd. and released under the [Reciprocal
+Public License 1.5](LICENSE) (RPL-1.5); its source code was published under Apache-2.0 before
+version 1.0.0. It is changed from
+[amcache-forensic](https://github.com/SecurityRonin/amcache-forensic) (copyright Albert Hui), whose
+code stays under the Apache License 2.0 (`LICENSE-APACHE`): each Rust file changed from it says so
+in its header.
+
 ---
 
 Originally developed by [Security Ronin](https://github.com/SecurityRonin). Modified and
-maintained by [Yamato Security](https://github.com/Yamato-Security) under the Apache-2.0 license.
+maintained by [Yamato Security](https://github.com/Yamato-Security).

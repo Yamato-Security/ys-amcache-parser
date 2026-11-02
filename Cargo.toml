@@ -7,7 +7,7 @@ members = ["core", "forensic"]
 [workspace.package]
 edition = "2024"
 rust-version = "1.99"
-license = "Apache-2.0"
+license = "RPL-1.5 AND Apache-2.0"
 authors = ["Albert Hui", "Zach Mathis (@yamatosecurity)"]
 repository = "https://github.com/Yamato-Security/ys-amcache-parser"
 readme = "README.md"

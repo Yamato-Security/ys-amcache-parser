@@ -31,7 +31,9 @@ findings table, and [Validation](validation.md) for how correctness is establish
 
 This is a modified fork of
 [`SecurityRonin/amcache-forensic`](https://github.com/SecurityRonin/amcache-forensic). The upstream
-history, attribution, and Apache-2.0 license are retained.
+history and attribution are retained, and upstream's code stays under its Apache-2.0 license;
+ys-amcache-parser is copyright Shirofune Security Co., Ltd. and released under the Reciprocal Public
+License 1.5 (RPL-1.5).
 
 !!! caution "Interpret Amcache evidence carefully"
 
