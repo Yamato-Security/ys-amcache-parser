@@ -119,6 +119,16 @@ Tier-1 against **real DFIRArtifactMuseum hives** (MIT) from **four Windows syste
 | `AMCACHE-SYSTEM-BINARY-RELOCATED` | High | T1036.005 | A Windows system-binary name recorded at a non-`System32` path (masquerading). |
 | `AMCACHE-SUSPICIOUS-PATH` | Medium | T1204 | An executable inventoried from a common staging directory (Temp, Downloads, `$Recycle.Bin`, …). |
 
+## Contributing
+
+Contributions require this repository's [Contributor License Agreement](CLA.md).
+It permits **Zachary Mathis** and **Shirofune Security Co., Ltd.** to use and
+sell covered contributions in proprietary editions, while accepted contributions
+also remain available in the free, open-source community edition.
+Read [how to sign](CONTRIBUTING.md#how-to-sign). The `cla/required` check uses
+the [maintainer-verified signer registry](.github/cla/signatures.json); first-time
+signatures require verification and registration.
+
 ## License
 
 ys-amcache-parser is copyright Shirofune Security Co., Ltd. and released under the [Reciprocal

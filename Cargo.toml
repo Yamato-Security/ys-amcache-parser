@@ -15,12 +15,12 @@ readme = "README.md"
 [workspace.dependencies]
 amcache-core = { package = "ys-amcache-parser-core", path = "core", version = "1.0.0" }
 # Generic REGF hive parser — Amcache IS a hive, so core walks its schema with winreg-core.
-winreg-core = "0.2"
-forensicnomicon = "1"
-csv = "1"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-same-file = "1"
+winreg-core = "0.2.1"
+forensicnomicon = "1.12.1"
+csv = "1.4.0"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+same-file = "1.0.6"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
