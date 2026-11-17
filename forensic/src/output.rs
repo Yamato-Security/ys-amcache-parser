@@ -101,7 +101,8 @@ struct Tool<'a> {
 struct Summary {
     file_count: usize,
     device_count: usize,
-    finding_count: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    finding_count: Option<usize>,
     files_included: bool,
     devices_included: bool,
 }
@@ -411,6 +412,24 @@ pub fn write_text(
     report: &AmcacheReport,
     options: OutputOptions,
 ) -> Result<(), OutputError> {
+    write_text_impl(&mut writer, report, options, true)
+}
+
+/// Write inventory and device metadata without findings or detection summaries.
+pub fn write_inventory_text(
+    writer: impl Write,
+    report: &AmcacheReport,
+    options: OutputOptions,
+) -> Result<(), OutputError> {
+    write_text_impl(writer, report, options, false)
+}
+
+fn write_text_impl(
+    mut writer: impl Write,
+    report: &AmcacheReport,
+    options: OutputOptions,
+    include_findings: bool,
+) -> Result<(), OutputError> {
     writeln!(
         writer,
         "Amcache: {} file entries, {} device entries",
@@ -418,9 +437,9 @@ pub fn write_text(
         report.amcache.device_entries.len()
     )?;
 
-    if report.anomalies.is_empty() {
+    if include_findings && report.anomalies.is_empty() {
         writeln!(writer, "Findings: none")?;
-    } else {
+    } else if include_findings {
         writeln!(writer, "Findings ({}):", report.anomalies.len())?;
         for anomaly in &report.anomalies {
             let record = FindingRecord::from(anomaly);
@@ -470,6 +489,26 @@ pub fn write_jsonl(
     report: &AmcacheReport,
     options: OutputOptions,
 ) -> Result<(), OutputError> {
+    write_jsonl_impl(&mut writer, source, report, options, true)
+}
+
+/// Write inventory records without finding rows or finding counts.
+pub fn write_inventory_jsonl(
+    writer: impl Write,
+    source: &str,
+    report: &AmcacheReport,
+    options: OutputOptions,
+) -> Result<(), OutputError> {
+    write_jsonl_impl(writer, source, report, options, false)
+}
+
+fn write_jsonl_impl(
+    mut writer: impl Write,
+    source: &str,
+    report: &AmcacheReport,
+    options: OutputOptions,
+    include_findings: bool,
+) -> Result<(), OutputError> {
     let schema = schema_name(report.amcache.schema);
     write_jsonl_record(
         &mut writer,
@@ -479,10 +518,16 @@ pub fn write_jsonl(
             source,
             amcache_schema: schema,
             record_type: "summary",
-            record: summary(report, options),
+            record: {
+                let mut summary = summary(report, options);
+                if !include_findings {
+                    summary.finding_count = None;
+                }
+                summary
+            },
         },
     )?;
-    for anomaly in &report.anomalies {
+    for anomaly in report.anomalies.iter().filter(|_| include_findings) {
         write_jsonl_record(
             &mut writer,
             &JsonlEnvelope {
@@ -539,6 +584,27 @@ pub fn write_csv_directory(
     report: &AmcacheReport,
     options: OutputOptions,
 ) -> Result<Vec<PathBuf>, OutputError> {
+    write_csv_directory_impl(directory, source, report, options, true)
+}
+
+/// Write Summary, Files and Devices tables without creating or replacing a findings table.
+/// Existing findings files from an earlier analysis are not part of this export.
+pub fn write_inventory_csv_directory(
+    directory: &Path,
+    source: &str,
+    report: &AmcacheReport,
+    options: OutputOptions,
+) -> Result<Vec<PathBuf>, OutputError> {
+    write_csv_directory_impl(directory, source, report, options, false)
+}
+
+fn write_csv_directory_impl(
+    directory: &Path,
+    source: &str,
+    report: &AmcacheReport,
+    options: OutputOptions,
+    include_findings: bool,
+) -> Result<Vec<PathBuf>, OutputError> {
     fs::create_dir_all(directory)?;
     let stem = safe_stem(source);
     let schema = schema_name(report.amcache.schema);
@@ -575,8 +641,11 @@ pub fn write_csv_directory(
             schema,
             report,
             options,
+            include_findings,
         )?;
-        write_findings_csv(&staging.join(&findings_name), source, report)?;
+        if include_findings {
+            write_findings_csv(&staging.join(&findings_name), source, report)?;
+        }
         write_files_csv(&staging.join(&files_name), source, schema, files)?;
         write_devices_csv(&staging.join(&devices_name), source, schema, devices)?;
         Ok(())
@@ -587,7 +656,12 @@ pub fn write_csv_directory(
     }
 
     // Commit the summary last: its presence then indicates that all detail tables were staged.
-    for name in [&files_name, &devices_name, &findings_name, &summary_name] {
+    let mut names = vec![&files_name, &devices_name];
+    if include_findings {
+        names.push(&findings_name);
+    }
+    names.push(&summary_name);
+    for name in names {
         if let Err(error) = replace_file(&staging.join(name), &directory.join(name)) {
             let _cleanup_result = fs::remove_dir_all(&staging);
             return Err(OutputError::Io(error));
@@ -595,12 +669,12 @@ pub fn write_csv_directory(
     }
     fs::remove_dir(&staging)?;
 
-    Ok(vec![
-        directory.join(summary_name),
-        directory.join(findings_name),
-        directory.join(files_name),
-        directory.join(devices_name),
-    ])
+    let mut paths = vec![directory.join(summary_name)];
+    if include_findings {
+        paths.push(directory.join(findings_name));
+    }
+    paths.extend([directory.join(files_name), directory.join(devices_name)]);
+    Ok(paths)
 }
 
 fn replace_file(staged: &Path, destination: &Path) -> io::Result<()> {
@@ -657,7 +731,7 @@ fn summary(report: &AmcacheReport, options: OutputOptions) -> Summary {
     Summary {
         file_count: report.amcache.file_entries.len(),
         device_count: report.amcache.device_entries.len(),
-        finding_count: report.anomalies.len(),
+        finding_count: Some(report.anomalies.len()),
         files_included: options.files,
         devices_included: options.devices,
     }
@@ -899,9 +973,10 @@ fn write_summary_csv(
     schema: &str,
     report: &AmcacheReport,
     options: OutputOptions,
+    include_findings: bool,
 ) -> Result<(), OutputError> {
     let mut writer = csv_writer(path)?;
-    writer.write_record([
+    let mut headers = vec![
         "record_type",
         "output_schema_version",
         "tool_name",
@@ -913,8 +988,8 @@ fn write_summary_csv(
         "finding_count",
         "files_included",
         "devices_included",
-    ])?;
-    writer.write_record([
+    ];
+    let mut values = vec![
         "summary".to_string(),
         OUTPUT_SCHEMA_VERSION.to_string(),
         tool().name.to_string(),
@@ -926,7 +1001,13 @@ fn write_summary_csv(
         report.anomalies.len().to_string(),
         options.files.to_string(),
         options.devices.to_string(),
-    ])?;
+    ];
+    if !include_findings {
+        headers.remove(8);
+        values.remove(8);
+    }
+    writer.write_record(headers)?;
+    writer.write_record(values)?;
     writer.flush()?;
     Ok(())
 }
@@ -1221,6 +1302,77 @@ mod tests {
             },
             anomalies: Vec::new(),
         }
+    }
+
+    #[test]
+    fn inventory_exports_preserve_evidence_without_findings() {
+        let mut report = report();
+        report.anomalies = crate::audit(&report.amcache);
+        assert_eq!(report.anomalies.len(), 1);
+        let options = OutputOptions {
+            files: true,
+            devices: true,
+        };
+
+        let mut parsed = Vec::new();
+        write_inventory_jsonl(&mut parsed, "Amcache.hve", &report, options).unwrap();
+        let records: Vec<serde_json::Value> = String::from_utf8(parsed)
+            .unwrap()
+            .lines()
+            .map(|line| serde_json::from_str(line).unwrap())
+            .collect();
+        assert_eq!(records.len(), 3);
+        assert!(records[0].get("finding_count").is_none());
+        assert_eq!(records[1]["record_type"], "file");
+        assert_eq!(records[1]["publisher"], "ACME \"Security\", Inc.");
+        assert_eq!(records[1]["size"], u64::MAX.to_string());
+        assert_eq!(records[2]["record_type"], "device");
+        let mut text = Vec::new();
+        write_inventory_text(&mut text, &report, options).unwrap();
+        let text = String::from_utf8(text).unwrap();
+        assert!(!text.contains("Findings"));
+        assert!(text.contains("Inventoried executables"));
+
+        let suffix = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let directory =
+            std::env::temp_dir().join(format!("amcache-inventory-{}-{suffix}", std::process::id()));
+        let inventory = directory.join("inventory");
+        let analyzed = directory.join("analyzed");
+        let paths =
+            write_inventory_csv_directory(&inventory, "Amcache.hve", &report, options).unwrap();
+        let old = write_csv_directory(&analyzed, "Amcache.hve", &report, options).unwrap();
+        assert_eq!(paths.len(), 3);
+        assert_eq!(old.len(), 4);
+        for path in &paths {
+            let name = path.file_name().unwrap();
+            assert!(!name.to_string_lossy().contains("findings"));
+            if name.to_string_lossy().contains("summary") {
+                let mut csv = csv::Reader::from_path(path).unwrap();
+                assert!(!csv.headers().unwrap().iter().any(|h| h == "finding_count"));
+            } else {
+                assert_eq!(
+                    fs::read(path).unwrap(),
+                    fs::read(analyzed.join(name)).unwrap()
+                );
+            }
+        }
+        // A parser-only export must not alter a pre-existing analysis file.
+        let findings = old
+            .iter()
+            .find(|p| {
+                p.file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .contains("findings")
+            })
+            .unwrap();
+        let before = fs::read(findings).unwrap();
+        write_inventory_csv_directory(&analyzed, "Amcache.hve", &report, options).unwrap();
+        assert_eq!(before, fs::read(findings).unwrap());
+        fs::remove_dir_all(directory).unwrap();
     }
 
     #[test]
