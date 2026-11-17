@@ -1,4 +1,19 @@
 {
   "schema_version": 1,
-  "agreements": []
+  "agreements": [
+    {
+      "record_id": "cla-1.1-shirofune-security-20261118",
+      "cla_version": "1.1",
+      "cla_sha256": "62e464669828936f58a763440bcf547de5e32c0be167def3ad75189c7cdd73b2",
+      "github_user_ids": [
+        43838376
+      ],
+      "github_logins": {
+        "43838376": "Shirofune-Security"
+      },
+      "verified_by_github_user_id": 43838376,
+      "verified_at": "2026-11-17T21:44:10Z",
+      "evidence_ref": "https://github.com/Yamato-Security/ys-amcache-parser/pull/10#issuecomment-6961846767"
+    }
+  ]
 }
