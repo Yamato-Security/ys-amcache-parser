@@ -1,5 +1,13 @@
 # ys-amcache-parser
 
+Library consumers that need inventory without detection policy can use
+`amcache_forensic::parse_bytes` and construct an `AmcacheReport` with an empty
+`anomalies` list. The `output::write_inventory_text`, `write_inventory_jsonl`, and
+`write_inventory_csv_directory` functions preserve file/device metadata while
+omitting findings and finding counts. Existing analysis and output APIs keep
+their behavior. CSV inventory exports return only Summary, Files and Devices;
+pre-existing findings files are left untouched and are not part of that export.
+
 [![CI](https://github.com/Yamato-Security/ys-amcache-parser/actions/workflows/ci.yml/badge.svg)](https://github.com/Yamato-Security/ys-amcache-parser/actions/workflows/ci.yml)
 [![Rust 1.99+](https://img.shields.io/badge/rust-1.99%2B-orange.svg)](https://www.rust-lang.org)
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance)

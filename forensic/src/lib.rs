@@ -42,7 +42,7 @@ use forensicnomicon::report::{Category, Finding, Observation, Severity, Source, 
 // Re-export the core types that appear in this crate's public API.
 pub use amcache_core::{
     Amcache, AmcacheDeviceEntry, AmcacheError, AmcacheFileEntry, AmcacheRegistryValue,
-    AmcacheRegistryValueData, AmcacheSchema,
+    AmcacheRegistryValueData, AmcacheSchema, parse_bytes,
 };
 
 /// The result of analyzing an Amcache hive.
